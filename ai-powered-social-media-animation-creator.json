@@ -1,0 +1,1103 @@
+{
+    "name": "Creative Social Media Animation",
+    "nodes": [
+        {
+            "parameters": {
+                "formTitle": "No Title Yet",
+                "formFields": {
+                    "values": [
+                        {
+                            "fieldLabel": "Upload your photo",
+                            "fieldType": "file",
+                            "acceptFileTypes": ".jpg, .jpeg, .png",
+                            "requiredField": true
+                        },
+                        {
+                            "fieldLabel": "Upload your screenshot",
+                            "fieldType": "file",
+                            "acceptFileTypes": ".jpg, .jpeg, .png",
+                            "requiredField": true
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.formTrigger",
+            "typeVersion": 2.29999999999999982236431605997495353221893310546875,
+            "position": [
+                -624,
+                464
+            ],
+            "id": "a06ee602-bb9b-4991-870b-8157531ca3e1",
+            "name": "On form submission",
+            "webhookId": "051e5b73-9931-46ed-b312-6ccd7b596dad"
+        },
+        {
+            "parameters": [],
+            "type": "n8n-nodes-base.merge",
+            "typeVersion": 3.20000000000000017763568394002504646778106689453125,
+            "position": [
+                -176,
+                464
+            ],
+            "id": "b62626fe-0f29-45c7-b227-1fdfc94de1d1",
+            "name": "Merge"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.kie.ai\/api\/v1\/jobs\/createTask",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"model\": \"google\/nano-banana-edit\",\n  \"input\": {\n    \"prompt\": {{ JSON.stringify($json.nanoB_prompt) }},\n    \"image_urls\": [\n      \"{{ $json.photo_url }}\",\n      \"{{ $json.screenshot_url }}\"\n    ],\n    \"output_format\": \"png\",\n    \"image_size\": \"9:16\"\n  }\n}",
+                "options": {
+                    "redirect": {
+                        "redirect": []
+                    }
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                416,
+                128
+            ],
+            "id": "33e25b30-4d6d-46e4-8abd-19006ed5bde5",
+            "name": "nano-banana-edit"
+        },
+        {
+            "parameters": {
+                "amount": 30
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.100000000000000088817841970012523233890533447265625,
+            "position": [
+                624,
+                128
+            ],
+            "id": "dc5b96ef-b95e-4dfa-baa5-4f159d878ace",
+            "name": "Wait",
+            "webhookId": "4d587c0c-8c2d-467b-8fbb-6ab0c8fcf3f6"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.cloudinary.com\/v1_1\/<YOUR_CLOUD_NAME>\/image\/upload",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "upload_preset",
+                            "value": "YOUR_PRESET_NAME"
+                        },
+                        {
+                            "name": "folder",
+                            "value": "YOUR_FOLDER_NAME"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "contentType": "multipart-form-data",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "parameterType": "formBinaryData",
+                            "name": "=file",
+                            "inputDataFieldName": "=Upload_your_photo"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                -400,
+                368
+            ],
+            "id": "77341fc8-7b44-4f7f-a6c8-763bb834ffbc",
+            "name": "Upload Photo"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.cloudinary.com\/v1_1\/<YOUR_CLOUD_NAME>\/image\/upload",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "upload_preset",
+                            "value": "YOUR_PRESET_NAME"
+                        },
+                        {
+                            "name": "folder",
+                            "value": "YOUR_FOLDER_NAME"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "contentType": "multipart-form-data",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "parameterType": "formBinaryData",
+                            "name": "=file",
+                            "inputDataFieldName": "=Upload_your_screenshot"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                -400,
+                560
+            ],
+            "id": "30381377-9acb-45b8-9e7b-6b9561641204",
+            "name": "Upload Screenshot"
+        },
+        {
+            "parameters": {
+                "url": "https:\/\/api.kie.ai\/api\/v1\/jobs\/recordInfo",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "taskId",
+                            "value": "={{ $json.data.taskId }}"
+                        }
+                    ]
+                },
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                832,
+                128
+            ],
+            "id": "7ca57682-e3a8-49b0-9b15-7731f7e75aeb",
+            "name": "nano-banana-result"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.kie.ai\/api\/v1\/veo\/generate",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.veo3_prompt) }},\n  \"imageUrls\": [\n    \"{{ $json.nano_result }}\"\n  ],\n  \"model\": \"veo3_fast\",\n  \"aspectRatio\": \"9:16\",\n  \"enableTranslation\": true\n}",
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                384,
+                448
+            ],
+            "id": "582d355a-fe33-4b75-80eb-8dd50282c2b2",
+            "name": "veo3-video"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "5d29a2e5-b279-4a70-ba47-5cf161498d51",
+                            "name": "nano_result",
+                            "value": "={{ JSON.parse($json.data.resultJson).resultUrls[0] }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "14ac8190-f6c1-4c74-9b5d-5dca8234199f",
+                            "name": "veo3_prompt",
+                            "value": "=Animate the provided image. A young man, wearing a white hoodie, black shorts, and white sneakers, with white headphones around his neck, walks slowly towards the viewer while intently looking at a smartphone held in his hands. He is encased within a glowing, transparent digital frame that resembles an Instagram profile. Around the frame, social media engagement icons such as red hearts (likes) and white speech bubbles (comments) float, subtly animate. The camera executes a very subtle, slow push-in as the man walks. The overall animation should be smooth and highly realistic, with a focus on detailed rendering of the floating icons.",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.399999999999999911182158029987476766109466552734375,
+            "position": [
+                176,
+                448
+            ],
+            "id": "13663a81-9bdd-4d8d-9881-b6f3330e3bcf",
+            "name": "veo3 setup"
+        },
+        {
+            "parameters": {
+                "url": "https:\/\/api.kie.ai\/api\/v1\/veo\/record-info",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "taskId",
+                            "value": "={{ $json.data.taskId }}"
+                        }
+                    ]
+                },
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                832,
+                448
+            ],
+            "id": "6886ea1a-4dd2-4613-afa7-a2d9a17bdf58",
+            "name": "veo3-video-status",
+            "executeOnce": false
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "05a0423d-75fd-482c-8882-181523d916b5",
+                            "name": "faceimage_url",
+                            "value": "={{ $('nano-banana setup').item.json.photo_url }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "1bc6bfbc-a0a2-4947-b38b-c8c6ada13dd1",
+                            "name": "veo3_video_url",
+                            "value": "={{ $json.data.response.resultUrls[0] }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.399999999999999911182158029987476766109466552734375,
+            "position": [
+                128,
+                816
+            ],
+            "id": "30e31c6c-b719-4f12-8b81-84df4ebcf42b",
+            "name": "faceswap setup"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.wavespeed.ai\/api\/v3\/wavespeed-ai\/video-face-swap",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"face_image\": \"{{ $json.faceimage_url }}\",\n  \"max_duration\": 0,\n  \"target_gender\": \"all\",\n  \"target_index\": 0,\n  \"video\": \"{{ $json.veo3_video_url }}\"\n}",
+                "options": {
+                    "redirect": {
+                        "redirect": []
+                    }
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                352,
+                816
+            ],
+            "id": "a3c8dc9e-d095-4151-bb29-cbf5cccb114f",
+            "name": "video-faceswap-submit"
+        },
+        {
+            "parameters": {
+                "url": "=https:\/\/api.wavespeed.ai\/api\/v3\/predictions\/{{ $json.data.id }}\/result",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        }
+                    ]
+                },
+                "options": {
+                    "redirect": {
+                        "redirect": []
+                    }
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                800,
+                816
+            ],
+            "id": "59d6edeb-0c9b-4376-8bd6-c48df899e2cd",
+            "name": "video-faceswap-result"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "e328e13e-5dd8-435c-ab09-5d569478c7ca",
+                            "name": "photo_url",
+                            "value": "={{ $items()[0].json.url }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "f865557e-3316-4497-a023-f0382a845f95",
+                            "name": "screenshot_url",
+                            "value": "={{ $items()[1].json.url }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "0051849a-6306-419d-8cd3-ffbbe860161f",
+                            "name": "nanoB_prompt",
+                            "value": "=Generate an ultra-realistic, cinematic photo of the uploaded person (preserve the exact face, hairstyle, skin tone, and body identity - no changes) walking out of a giant transparent glossy Instagram profile screen. The person should wear a white oversized hoodie, black shorts, white sneakers, and wireless headphones around the neck, while looking down at a smartphone.\n\nThe background should feature a glowing, transparent glossy Instagram interface with cracked-glass visual effects, surrounded by floating social media icons like hearts, likes, and comments. Replace the Instagram profile data with the details from the provided screenshot of my own account — profile picture, username, bio, posts, followers, and following numbers should match exactly. The instagram interface must be visible behind the person in a transparent glossy style.\n\nLighting: Use a 40L cinematic studio setup for natural, photorealistic results -\n• Soft diffused key light on the face\n• Balanced fill light for depth\n• Subtle rim light around the shoulders & hair\n• Accurate reflections on the Instagram glass.\nCamera Angle: Dynamic front-facing cinematic shot, slightly tilted to capture the moment of stepping out.\nAtmosphere: Clean, futuristic, minimal - premium Instagram aesthetic.\nFinal Output: 8K, ultra-realistic skin texture, natural color grading, cinematic sharpness, masterpiece",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.399999999999999911182158029987476766109466552734375,
+            "position": [
+                192,
+                128
+            ],
+            "id": "e87ae013-2e1b-48b9-8b8e-635b1ab42ad0",
+            "name": "nano-banana setup",
+            "executeOnce": true
+        },
+        {
+            "parameters": {
+                "amount": 30
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.100000000000000088817841970012523233890533447265625,
+            "position": [
+                624,
+                448
+            ],
+            "id": "4074e62b-36ad-4e09-b6df-dc78e1da18ed",
+            "name": "Wait1",
+            "webhookId": "a927af65-ec68-4252-ab0b-56cec14d17ed"
+        },
+        {
+            "parameters": {
+                "amount": 10
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.100000000000000088817841970012523233890533447265625,
+            "position": [
+                576,
+                816
+            ],
+            "id": "d64c4953-ae92-4f11-92b6-3e36e6d271b9",
+            "name": "Wait2",
+            "webhookId": "fb58de0a-345e-4807-a97b-f4dbacd9c05b"
+        },
+        {
+            "parameters": {
+                "rules": {
+                    "values": [
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "9878c372-e014-47da-9d1a-805d77610ec4",
+                                        "leftValue": "={{ $json.data.state }}",
+                                        "rightValue": "fail",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals",
+                                            "name": "filter.operator.equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "fail"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "leftValue": "=generating waiting queuing",
+                                        "rightValue": "={{ $json.data.state }}",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "contains"
+                                        },
+                                        "id": "e4482a59-8772-48f2-8329-508bff7c8144"
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "generating"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "f413c978-cd36-426d-9e7b-3e7c77e654e7",
+                                        "leftValue": "={{ $json.data.state }}",
+                                        "rightValue": "success",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals",
+                                            "name": "filter.operator.equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "success"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 3.29999999999999982236431605997495353221893310546875,
+            "position": [
+                1072,
+                112
+            ],
+            "id": "730e6a72-9370-4531-a686-3cff0a7bfa60",
+            "name": "Switch"
+        },
+        {
+            "parameters": [],
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                1424,
+                448
+            ],
+            "id": "1f4b2d7a-4c7c-4fe2-b851-ceb8f850ebfd",
+            "name": "No Operation, do nothing1"
+        },
+        {
+            "parameters": {
+                "rules": {
+                    "values": [
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "leftValue": "={{ $json.data.successFlag }}",
+                                        "rightValue": 2,
+                                        "operator": {
+                                            "type": "number",
+                                            "operation": "equals"
+                                        },
+                                        "id": "18aa371f-d895-43a2-977e-117594497a11"
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "failed"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "c4fb646d-932e-49a7-9e43-c6a1815061a9",
+                                        "leftValue": "={{ $json.data.successFlag }}",
+                                        "rightValue": 3,
+                                        "operator": {
+                                            "type": "number",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "generationFailed"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "a20db6c9-0ef4-4926-a97a-6adf62c63e15",
+                                        "leftValue": "={{ $json.data.successFlag }}",
+                                        "rightValue": 0,
+                                        "operator": {
+                                            "type": "number",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "generating"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "83c7438b-bca4-4edc-b075-c833b1d0e538",
+                                        "leftValue": "={{ $json.data.successFlag }}",
+                                        "rightValue": 1,
+                                        "operator": {
+                                            "type": "number",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "success"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 3.29999999999999982236431605997495353221893310546875,
+            "position": [
+                1088,
+                416
+            ],
+            "id": "d1be0342-fb69-483e-b620-dc3aae0cd960",
+            "name": "Switch1"
+        },
+        {
+            "parameters": {
+                "rules": {
+                    "values": [
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "f025d309-6f75-4cbf-a278-8deabb6b45c3",
+                                        "leftValue": "={{ $json.data.status }}",
+                                        "rightValue": "failed",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals",
+                                            "name": "filter.operator.equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "failed"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "448c60a3-8d92-4064-b8c9-399684fa97a3",
+                                        "leftValue": "={{ $json.data.status }}",
+                                        "rightValue": "completed",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals",
+                                            "name": "filter.operator.equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "completed"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "leftValue": "={{ $json.data.status }}",
+                                        "rightValue": "processing",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "id": "ae9f2c2c-4227-4180-a0e1-cb4fb5193eb0"
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "processing"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 3.29999999999999982236431605997495353221893310546875,
+            "position": [
+                1024,
+                800
+            ],
+            "id": "b9a873e7-9a5c-4e6a-9bb8-00d4675f72a1",
+            "name": "Switch2"
+        },
+        {
+            "parameters": {
+                "url": "={{ $json.data.outputs[0] }}",
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                1296,
+                816
+            ],
+            "id": "4c3069f6-1103-42aa-a97b-6cceb726ec9f",
+            "name": "final result"
+        },
+        {
+            "parameters": {
+                "content": "## Nano Banana Image Generation",
+                "height": 304,
+                "width": 1280
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                64,
+                48
+            ],
+            "typeVersion": 1,
+            "id": "886d153a-ab01-4420-9f36-9f9588cd234d",
+            "name": "Sticky Note"
+        },
+        {
+            "parameters": {
+                "content": "## Veo3 Video Generation",
+                "height": 336,
+                "width": 1280,
+                "color": 5
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                64,
+                368
+            ],
+            "typeVersion": 1,
+            "id": "3603cbb1-f51c-4b5f-992b-b7c635769f15",
+            "name": "Sticky Note1"
+        },
+        {
+            "parameters": {
+                "content": "## Video FaceSwap",
+                "height": 336,
+                "width": 1456,
+                "color": 4
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                64,
+                720
+            ],
+            "typeVersion": 1,
+            "id": "70854d2d-ba36-4aef-b452-1cf8fe4d08bb",
+            "name": "Sticky Note2",
+            "disabled": true
+        },
+        {
+            "parameters": {
+                "content": "## Image Setup",
+                "height": 1008,
+                "width": 768,
+                "color": 6
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -720,
+                48
+            ],
+            "typeVersion": 1,
+            "id": "e2d29004-884a-427c-9e11-4b5fdf5f67f6",
+            "name": "Sticky Note3"
+        }
+    ],
+    "pinData": [],
+    "connections": {
+        "On form submission": {
+            "main": [
+                [
+                    {
+                        "node": "Upload Photo",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Upload Screenshot",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Merge": {
+            "main": [
+                [
+                    {
+                        "node": "nano-banana setup",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "nano-banana-edit": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "nano-banana-result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Upload Photo": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Upload Screenshot": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 1
+                    }
+                ]
+            ]
+        },
+        "nano-banana-result": {
+            "main": [
+                [
+                    {
+                        "node": "Switch",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "veo3 setup": {
+            "main": [
+                [
+                    {
+                        "node": "veo3-video",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "veo3-video": {
+            "main": [
+                [
+                    {
+                        "node": "Wait1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "veo3-video-status": {
+            "main": [
+                [
+                    {
+                        "node": "Switch1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "faceswap setup": {
+            "main": [
+                [
+                    {
+                        "node": "video-faceswap-submit",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "video-faceswap-submit": {
+            "main": [
+                [
+                    {
+                        "node": "Wait2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "nano-banana setup": {
+            "main": [
+                [
+                    {
+                        "node": "nano-banana-edit",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait1": {
+            "main": [
+                [
+                    {
+                        "node": "veo3-video-status",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait2": {
+            "main": [
+                [
+                    {
+                        "node": "video-faceswap-result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "video-faceswap-result": {
+            "main": [
+                [
+                    {
+                        "node": "Switch2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Switch": {
+            "main": [
+                [
+                    {
+                        "node": "No Operation, do nothing1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "veo3 setup",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Switch1": {
+            "main": [
+                [
+                    {
+                        "node": "No Operation, do nothing1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "No Operation, do nothing1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Wait1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "faceswap setup",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Switch2": {
+            "main": [
+                [
+                    {
+                        "node": "No Operation, do nothing1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "final result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Wait2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "d2d5c42b-0ccb-46f8-91c8-572eabf3fd47",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "0b008bd86df5902c8c20987844e8ef7a6cf9a5639f4abd7f8a22764455c02c65"
+    },
+    "id": "hS9Ygtz6oRuQkz4Z",
+    "tags": []
+}

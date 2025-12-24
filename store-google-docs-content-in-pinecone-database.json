@@ -1,0 +1,136 @@
+{
+    "name": "Pinecone",
+    "nodes": [
+        {
+            "parameters": [],
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                272,
+                -144
+            ],
+            "id": "3fbc7409-fc87-48a1-821e-3d4fa24df68b",
+            "name": "When clicking ‘Execute workflow’"
+        },
+        {
+            "parameters": {
+                "operation": "get",
+                "documentURL": "130AAV9O40jFmol1fJRRXfCrJh54Cm_Zbw18Una5l_BY"
+            },
+            "type": "n8n-nodes-base.googleDocs",
+            "typeVersion": 2,
+            "position": [
+                496,
+                -144
+            ],
+            "id": "d9befc25-6bc4-4215-b065-6d414780adaa",
+            "name": "Get a document"
+        },
+        {
+            "parameters": {
+                "mode": "insert",
+                "pineconeIndex": {
+                    "__rl": true,
+                    "value": "sample",
+                    "mode": "list",
+                    "cachedResultName": "sample"
+                },
+                "options": {
+                    "pineconeNamespace": "Contacts"
+                }
+            },
+            "type": "@n8n\/n8n-nodes-langchain.vectorStorePinecone",
+            "typeVersion": 1.3000000000000000444089209850062616169452667236328125,
+            "position": [
+                720,
+                -144
+            ],
+            "id": "6aef1cd3-69ba-4e0c-b615-f79d21648303",
+            "name": "Pinecone Vector Store"
+        },
+        {
+            "parameters": {
+                "options": []
+            },
+            "type": "@n8n\/n8n-nodes-langchain.documentDefaultDataLoader",
+            "typeVersion": 1.100000000000000088817841970012523233890533447265625,
+            "position": [
+                848,
+                80
+            ],
+            "id": "9388db70-c1e0-4a72-8ae7-dc9276e36ba1",
+            "name": "Default Data Loader"
+        },
+        {
+            "parameters": {
+                "options": []
+            },
+            "type": "@n8n\/n8n-nodes-langchain.embeddingsOpenAi",
+            "typeVersion": 1.1999999999999999555910790149937383830547332763671875,
+            "position": [
+                656,
+                80
+            ],
+            "id": "6d388eef-8eaa-4d71-8119-887aef4fd5f2",
+            "name": "Embeddings OpenAI"
+        }
+    ],
+    "pinData": [],
+    "connections": {
+        "When clicking ‘Execute workflow’": {
+            "main": [
+                [
+                    {
+                        "node": "Get a document",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Default Data Loader": {
+            "ai_document": [
+                [
+                    {
+                        "node": "Pinecone Vector Store",
+                        "type": "ai_document",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Embeddings OpenAI": {
+            "ai_embedding": [
+                [
+                    {
+                        "node": "Pinecone Vector Store",
+                        "type": "ai_embedding",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get a document": {
+            "main": [
+                [
+                    {
+                        "node": "Pinecone Vector Store",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "bdb9213a-e507-44f4-b93e-6683a18b36ab",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "0b008bd86df5902c8c20987844e8ef7a6cf9a5639f4abd7f8a22764455c02c65"
+    },
+    "id": "OiwD2VnDQFJhnRAH",
+    "tags": []
+}

@@ -1,0 +1,647 @@
+{
+    "name": "Outfit Animator AI Agent",
+    "nodes": [
+        {
+            "parameters": {
+                "formTitle": "Image trigger",
+                "formDescription": "upload your product image to get a CGI ad video of your product",
+                "formFields": {
+                    "values": [
+                        {
+                            "fieldLabel": "upload product image",
+                            "fieldType": "file",
+                            "multipleFiles": false
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.formTrigger",
+            "typeVersion": 2.20000000000000017763568394002504646778106689453125,
+            "position": [
+                48,
+                112
+            ],
+            "id": "08bb65ce-4dbf-4830-b9cb-93c1ef5327fa",
+            "name": "On form submission",
+            "webhookId": "5749c6df-9ba5-4e62-b6a9-6836a205a76e"
+        },
+        {
+            "parameters": {
+                "jsCode": "\/\/ pull url from whichever shape we got\nconst link =\n  $json.url                       \/\/ returned by create_shared_link_with_settings\n  ?? $json.links?.[0]?.url;       \/\/ returned by list_shared_links\n\nreturn [\n  {\n    json: {\n      image_url: link\n        \/\/ turn “dl=0” into a direct link\n        .replace(\"?dl=0\", \"?raw=1\")\n        .replace(\"&dl=0\", \"&raw=1\")\n    }\n  }\n];\n"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1248,
+                128
+            ],
+            "id": "c9feb29b-d13f-4e45-96d3-d4eb7a95b8d9",
+            "name": "Code4"
+        },
+        {
+            "parameters": {
+                "path": "=\/{{ $binary[\"product_image\"].fileName.replace(\/s+\/g, \"_\") }}",
+                "binaryData": true,
+                "binaryPropertyName": "=product_image"
+            },
+            "type": "n8n-nodes-base.dropbox",
+            "typeVersion": 1,
+            "position": [
+                448,
+                112
+            ],
+            "id": "25687eef-f356-4717-8716-4821eb23c19c",
+            "name": "Upload a file",
+            "credentials": {
+                "dropboxApi": {
+                    "id": "hNBp9cq77LnC05BW",
+                    "name": "virtual drop box"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "const output = [];\n\nfor (const currentItem of items) {\n  const binaryKeys = Object.keys(currentItem.binary || {});\n  \n  for (const key of binaryKeys) {\n    output.push({\n      binary: {\n        product_image: currentItem.binary[key]\n      },\n      json: {\n        original_field: key\n      }\n    });\n  }\n}\n\nreturn output;\n"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                256,
+                112
+            ],
+            "id": "209af9e8-faf0-411b-8e44-b848406e237c",
+            "name": "Code3"
+        },
+        {
+            "parameters": {
+                "amount": 10
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.100000000000000088817841970012523233890533447265625,
+            "position": [
+                688,
+                544
+            ],
+            "id": "f01ee81a-0a2f-42d3-a413-9ba55f5070c8",
+            "name": "Wait4",
+            "webhookId": "9c805ed9-fd61-4c8d-a3e7-7fac109b9e11"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.runware.ai\/v1",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <API KEY>"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application\/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "=[\n  {\n    \"taskType\": \"imageInference\",\n    \"taskUUID\": \"{{ $json.taskUUID }}\",\n    \"positivePrompt\": \"Place a human model wearing this clothing product. The model's gender should be automatically matched based on the clothing type (e.g., male for men's wear, female for women's wear). Add a realistic studio background that suits the product type — for example, clean, minimal, and well-lit studio settings typically used in fashion catalog or eCommerce photoshoots. Do not change the original look, design, color, texture, or fit of the clothing product. The clothing should remain exactly as it appears in the original image. Ensure lighting, shadows, and reflections are consistent between the model, clothing, and studio background for a natural and professional finish.\",\n    \"referenceImages\": [\n      \"{{ $('Code4').item.json.image_url }}\" \n    ],\n    \"model\": \"bfl:3@1\",\n    \"height\": 1024,\n    \"width\": 1024,\n    \"numberResults\": 1,\n    \"outputType\": \"URL\",     \n    \"outputFormat\": \"PNG\"\n  }\n]\n",
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                224,
+                544
+            ],
+            "id": "96b2f97d-0ba9-488a-babd-c024f91a8b25",
+            "name": "Flux Image "
+        },
+        {
+            "parameters": {
+                "jsCode": "function uuidv4() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(\/[xy]\/g, function (c) {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nreturn [\n  {\n    json: {\n      taskUUID: uuidv4()\n    }\n  }\n];\n"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1168,
+                544
+            ],
+            "id": "9e28bfe7-1b46-4861-bdb8-0413b096c956",
+            "name": "Code1"
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "data",
+                "options": []
+            },
+            "type": "n8n-nodes-base.splitOut",
+            "typeVersion": 1,
+            "position": [
+                464,
+                912
+            ],
+            "id": "726569b4-2a4e-44c4-99ea-a7a11f76db3d",
+            "name": "Split Out"
+        },
+        {
+            "parameters": {
+                "amount": 3.5,
+                "unit": "minutes"
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.100000000000000088817841970012523233890533447265625,
+            "position": [
+                688,
+                912
+            ],
+            "id": "082bbf01-6b18-418a-8bf8-5d460e316ff9",
+            "name": "Wait",
+            "webhookId": "c8967848-f3fe-4b24-81e2-96799f183dea"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "a03b1618-e3c1-40c7-b3a3-26449ffee04e",
+                            "name": "finalVideoURL",
+                            "value": "={{ $json.data[0].videoURL }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.399999999999999911182158029987476766109466552734375,
+            "position": [
+                1184,
+                912
+            ],
+            "id": "197ac88c-e624-42ee-82e7-26f3109b682a",
+            "name": "Edit Fields1"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.runware.ai\/v1",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application\/json"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <API KEY>"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "=[\n  {\n    \"taskType\": \"videoInference\",\n    \"taskUUID\": \"{{ $json.taskUUID }}\",\n    \"model\": \"klingai:5@1\",\n    \"positivePrompt\": \"Create a natural-looking video animation where the model wearing the clothing product gently turns around to showcase the full outfit from all angles. The movement should feel realistic and smooth — no exaggerated poses or slow-motion effects. Do not change the original look, design, texture, or fit of the clothing product in any frame. The focus should remain entirely on the outfit. The lighting, model appearance, background, and product must remain visually consistent with the input image. Keep the animation subtle and professional — suitable for fashion or eCommerce use.\",\n    \"frameImages\": [\n      {\n        \"inputImage\": \"{{ $('Edit Fields').item.json.finalVideoURL }}\",\n        \"frame\": \"first\"\n      }\n    ],\n    \"duration\": 10,\n    \"width\": 1280,\n    \"height\": 720,\n    \"numberResults\": 1,\n    \"deliveryMethod\": \"async\"\n  }\n]\n",
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                224,
+                912
+            ],
+            "id": "e052c795-e49d-45ee-874d-fc5512d9ae63",
+            "name": "kling image to video post"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=https:\/\/api.runware.ai\/v1",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <API KEY>"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application\/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "=[\n  {\n    \"taskType\": \"getResponse\",\n    \"taskUUID\": \"{{ $json.taskUUID }}\"\n  }\n]\n",
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                912,
+                912
+            ],
+            "id": "99bb20c2-2e64-4143-a2d0-07552524b327",
+            "name": "kling imag to video get status"
+        },
+        {
+            "parameters": {
+                "jsCode": "function uuidv4() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(\/[xy]\/g, function (c) {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nreturn [\n  {\n    json: {\n      taskUUID: uuidv4()\n    }\n  }\n];\n"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1472,
+                128
+            ],
+            "id": "04c262e0-51ef-4a0d-9317-43365d25e547",
+            "name": "Code"
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "data",
+                "options": []
+            },
+            "type": "n8n-nodes-base.splitOut",
+            "typeVersion": 1,
+            "position": [
+                448,
+                544
+            ],
+            "id": "da98599f-8a15-417f-b711-6606ca3a49de",
+            "name": "Split Out1"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "a03b1618-e3c1-40c7-b3a3-26449ffee04e",
+                            "name": "finalVideoURL",
+                            "value": "={{ $json.imageURL }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.399999999999999911182158029987476766109466552734375,
+            "position": [
+                944,
+                544
+            ],
+            "id": "a122046e-793b-4412-8a14-312ea7ebf216",
+            "name": "Edit Fields"
+        },
+        {
+            "parameters": {
+                "content": "## Upload Product Image\n",
+                "height": 376,
+                "width": 1652
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                0,
+                0
+            ],
+            "id": "2fe08499-5d98-477f-82ef-4fad007e2815",
+            "name": "Sticky Note1"
+        },
+        {
+            "parameters": {
+                "content": "## Generate Product image\n",
+                "height": 304,
+                "width": 1312
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                64,
+                464
+            ],
+            "id": "13be8f4c-a480-4dd4-b358-fd266a5d6f2d",
+            "name": "Sticky Note2"
+        },
+        {
+            "parameters": {
+                "content": "## Generate Video\n",
+                "height": 304,
+                "width": 1312
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                64,
+                816
+            ],
+            "id": "68d2c20b-11fe-46d7-a105-5b0ee59ea3b1",
+            "name": "Sticky Note3"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "f40d86ba-285c-4893-9bc7-c2168a46ef8d",
+                            "leftValue": "={{$json[\"links\"].length}}",
+                            "rightValue": 0,
+                            "operator": {
+                                "type": "number",
+                                "operation": "gt"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.20000000000000017763568394002504646778106689453125,
+            "position": [
+                848,
+                48
+            ],
+            "id": "ba4dd172-f256-4295-a78e-71bfd7b5abfd",
+            "name": "If"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.dropboxapi.com\/2\/sharing\/create_shared_link_with_settings",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <API Key>"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application\/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"path\": \"{{ $('Upload a file').item.json.path_display }}\",\n  \"settings\": {\n    \"requested_visibility\": \"public\"\n  }\n}",
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                1008,
+                144
+            ],
+            "id": "6922a78e-d781-4be8-9fe6-230dc25fbf7d",
+            "name": "HTTP Request6"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.dropboxapi.com\/2\/sharing\/list_shared_links",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <API Key>"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application\/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"path\": \"{{ $('Upload a file').item.json.path_display }}\",\n  \"direct_only\": true\n}\n",
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                640,
+                112
+            ],
+            "id": "4ebead29-4e61-403c-acee-9ccc9d859beb",
+            "name": "HTTP Request1"
+        }
+    ],
+    "pinData": [],
+    "connections": {
+        "On form submission": {
+            "main": [
+                [
+                    {
+                        "node": "Code3",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code4": {
+            "main": [
+                [
+                    {
+                        "node": "Code",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Upload a file": {
+            "main": [
+                [
+                    {
+                        "node": "HTTP Request1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code3": {
+            "main": [
+                [
+                    {
+                        "node": "Upload a file",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait4": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Flux Image ": {
+            "main": [
+                [
+                    {
+                        "node": "Split Out1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code1": {
+            "main": [
+                [
+                    {
+                        "node": "kling image to video post",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Out": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "kling imag to video get status",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "kling image to video post": {
+            "main": [
+                [
+                    {
+                        "node": "Split Out",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "kling imag to video get status": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code": {
+            "main": [
+                [
+                    {
+                        "node": "Flux Image ",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Out1": {
+            "main": [
+                [
+                    {
+                        "node": "Wait4",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Edit Fields": {
+            "main": [
+                [
+                    {
+                        "node": "Code1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "Code4",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "HTTP Request6",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTTP Request1": {
+            "main": [
+                [
+                    {
+                        "node": "If",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTTP Request6": {
+            "main": [
+                [
+                    {
+                        "node": "Code4",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "74646a10-5ab9-40a5-8bd0-e9981ff20126",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "28dce675ee27a1064072e27c15b9f206e3cb763ee136d0c0334d042fdcdc426f"
+    },
+    "id": "j1UAD3mw7iKumE3l",
+    "tags": []
+}

@@ -1,0 +1,639 @@
+{
+    "name": "Motion Graphic AI Agent",
+    "nodes": [
+        {
+            "parameters": {
+                "formTitle": "AI Motion Graphics Video Generator",
+                "formDescription": "Describe your video concept and select format",
+                "formFields": {
+                    "values": [
+                        {
+                            "fieldLabel": "Upload your concept image",
+                            "fieldType": "file",
+                            "multipleFiles": false,
+                            "acceptFileTypes": ".jpg, .jpeg, .png, .webp",
+                            "requiredField": true
+                        },
+                        {
+                            "fieldLabel": "Video Description",
+                            "fieldType": "textarea",
+                            "placeholder": "Describe your motion graphics video concept in detail..."
+                        },
+                        {
+                            "fieldLabel": "Video Aspect Ratios",
+                            "fieldType": "dropdown",
+                            "fieldOptions": {
+                                "values": [
+                                    {
+                                        "option": "Square 1:1"
+                                    },
+                                    {
+                                        "option": "Standard 4:3"
+                                    },
+                                    {
+                                        "option": "Portrait 9:16"
+                                    },
+                                    {
+                                        "option": "Landscape 16:9"
+                                    }
+                                ]
+                            },
+                            "requiredField": true
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.formTrigger",
+            "typeVersion": 2.29999999999999982236431605997495353221893310546875,
+            "position": [
+                -928,
+                144
+            ],
+            "id": "a6ee7e5c-edd5-4c5c-bd84-1c9179a99001",
+            "name": "On form submission",
+            "webhookId": "116ffdb1-14c7-4c9f-b978-d2fb3a2a17cf"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "f2583ec3-e625-4bd3-badf-2b2fe4a9d0c8",
+                            "name": "videoDescription",
+                            "value": "={{ $json['Video Description'].trim() }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "e5508d68-0089-45be-ba51-fad89c0d99b2",
+                            "name": "aspectRatio",
+                            "value": "={{ $json['Video Aspect Ratios'] }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.399999999999999911182158029987476766109466552734375,
+            "position": [
+                -704,
+                288
+            ],
+            "id": "d65760d1-e4ac-47a0-9f2f-daad7a119535",
+            "name": "Input Validation"
+        },
+        {
+            "parameters": {
+                "jsCode": "\/\/ Input: aspectRatio field\n\/\/ Options: \"Landscape 16:9\", \"Portrait 9:16\", \"Square 1:1\", \"Standard 4:3\"\n\/\/ Output: width, height, resolution in 4K\n\nconst results = [];\n\nfor (const item of items) {\n  const ratio = (item.json.aspectRatio || \"\").toLowerCase();\n  let width, height;\n\n  if (ratio.includes(\"landscape\")) {\n    width = 3840;\n    height = 2160;\n  } else if (ratio.includes(\"portrait\")) {\n    width = 2160;\n    height = 3840;\n  } else if (ratio.includes(\"square\")) {\n    width = 2160;\n    height = 2160;\n  } else if (ratio.includes(\"standard\")) {\n    width = 2880;\n    height = 2160;\n  } else {\n    results.push({ json: { error: \"Invalid aspect ratio\" } });\n    continue;\n  }\n\n  results.push({\n    json: {\n      ...item.json, \/\/ keep original fields like videoDescription\n      width,\n      height,\n      resolution: `${width}*${height}`\n    }\n  });\n}\n\nreturn results;\n"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -480,
+                288
+            ],
+            "id": "18c5ee9d-40e4-4ffa-aa0b-6b92e8101ff7",
+            "name": "Aspect Ratio Conversion"
+        },
+        {
+            "parameters": {
+                "model": {
+                    "__rl": true,
+                    "value": "gpt-4.1-mini",
+                    "mode": "list",
+                    "cachedResultName": "gpt-4.1-mini"
+                },
+                "options": []
+            },
+            "type": "@n8n\/n8n-nodes-langchain.lmChatOpenAi",
+            "typeVersion": 1.1999999999999999555910790149937383830547332763671875,
+            "position": [
+                -80,
+                480
+            ],
+            "id": "4ac2a51d-a3bf-4772-94ed-62799c9e5e3a",
+            "name": "OpenAI Chat Model",
+            "credentials": {
+                "openAiApi": {
+                    "id": "bfZD7tWaxPGpOAH8",
+                    "name": "OpenAi account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "=video description: {{ $('Input Validation').item.json.videoDescription }} (Ignore it, if it's empty)\n\nAnalyze the uploaded image and generate a Start Frame image edit prompt that would logically lead to this End Frame. Consider the scene's elements, composition, lighting, and any apparent motion or transformation. Return only the image edit prompt text - no explanations, no additional formatting, just the prompt text ready to paste.\n\nThe Start Frame should represent an earlier state that would naturally progress to the uploaded End Frame image.",
+                "options": {
+                    "passthroughBinaryImages": true
+                }
+            },
+            "type": "@n8n\/n8n-nodes-langchain.agent",
+            "typeVersion": 2.20000000000000017763568394002504646778106689453125,
+            "position": [
+                -32,
+                288
+            ],
+            "id": "770c3515-caf9-4ad8-ac2e-392011a324f1",
+            "name": "AI Agent"
+        },
+        {
+            "parameters": {
+                "jsCode": "return{\n  json: {},\n  binary: $('On form submission').item.binary\n}"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -256,
+                288
+            ],
+            "id": "1fcd20c4-b137-4a4f-8fc7-4671dccc7744",
+            "name": "Retrieve Binary File"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.wavespeed.ai\/api\/v3\/bytedance\/seedream-v4\/edit",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"enable_base64_output\": false,\n  \"enable_sync_mode\": true,\n  \"images\": [\n    \"{{ $json.data.outputs[0] }}\"\n  ],\n  \"prompt\": {{ JSON.stringify($json.output) }},\n  \"size\": \"2880*2160\"\n}",
+                "options": {
+                    "redirect": {
+                        "redirect": []
+                    }
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                544,
+                144
+            ],
+            "id": "65e89171-bc31-4584-bc8e-463bdbb3c8c9",
+            "name": "Seedream-v4-edit"
+        },
+        {
+            "parameters": {
+                "path": "=\/{{ $binary[\"Upload_your_concept_image\"].fileName.replace(\/s+\/g, \"_\").replace(\/(.[^.]+)$\/, \"_\" + $now.format(\"yyyyMMdd-HHmmss\") + \"$1\") }}",
+                "binaryData": true,
+                "binaryPropertyName": "Upload_your_concept_image"
+            },
+            "type": "n8n-nodes-base.dropbox",
+            "typeVersion": 1,
+            "position": [
+                -704,
+                -16
+            ],
+            "id": "e22ead7a-9bde-4b7b-8d63-daf6db8f695c",
+            "name": "Upload a file",
+            "credentials": {
+                "dropboxApi": {
+                    "id": "ydJH92nfqmAdiaUc",
+                    "name": "Dropbox account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "ab2a4759-2d3d-417f-8ea9-947f31d534a9",
+                            "name": "startFrame",
+                            "value": "={{ $('Seedream-v4-edit').item.json.data.outputs[0] }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "f8f5d1f6-ecca-454c-a484-b0a88c3fc867",
+                            "name": "endFrame",
+                            "value": "={{ $('Merge').item.json.data.outputs[0] }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "f02da3df-a01a-49a3-af35-5eaf9adb274d",
+                            "name": "userIdea",
+                            "value": "={{ $('Input Validation').item.json.videoDescription }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "86c287b4-24f5-46ec-80a1-31944e9ba2c4",
+                            "name": "aspectRatio",
+                            "value": "={{ $('Aspect Ratio Conversion').item.json.resolution }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.399999999999999911182158029987476766109466552734375,
+            "position": [
+                768,
+                144
+            ],
+            "id": "52c40aae-34ce-47dc-91b6-a274f8d6f217",
+            "name": "Edit Fields"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.wavespeed.ai\/api\/v3\/minimax\/hailuo-02\/i2v-pro",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"enable_prompt_expansion\": false,\n  \"end_image\": \"{{ $('Edit Fields').item.json.endFrame }}\",\n  \"image\": \"{{ $('Edit Fields').item.json.startFrame }}\",\n  \"prompt\": {{ JSON.stringify($json.content) }}\n}",
+                "options": {
+                    "redirect": {
+                        "redirect": []
+                    }
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                1216,
+                144
+            ],
+            "id": "b854117e-a3b3-4bc0-90bd-ae0b776a1ce8",
+            "name": "Hailuo-i2v-pro"
+        },
+        {
+            "parameters": {
+                "url": "=https:\/\/api.wavespeed.ai\/api\/v3\/predictions\/{{ $json.data.id }}\/result",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        }
+                    ]
+                },
+                "options": {
+                    "redirect": {
+                        "redirect": []
+                    }
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                1664,
+                144
+            ],
+            "id": "7caaa02c-5106-4e3d-a444-347a3313b92d",
+            "name": "Hailuo-i2v-pro-result"
+        },
+        {
+            "parameters": {
+                "unit": "minutes"
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.100000000000000088817841970012523233890533447265625,
+            "position": [
+                1440,
+                144
+            ],
+            "id": "f71b7378-8749-4337-8f79-b0f16ffb8b7c",
+            "name": "Wait",
+            "webhookId": "36dfa331-c43b-4330-999c-9cb7439ce6c6"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.wavespeed.ai\/api\/v3\/wavespeed-ai\/image-upscaler",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"creativity\": 2,\n  \"enable_base64_output\": false,\n  \"enable_sync_mode\": true,\n  \"image\": \"{{ $json.image_url }}\",\n  \"output_format\": \"jpeg\",\n  \"target_resolution\": \"4k\"\n}",
+                "options": {
+                    "redirect": {
+                        "redirect": []
+                    }
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                32,
+                -16
+            ],
+            "id": "d85d9b77-adf9-4098-99a3-70a7a965bc17",
+            "name": "image-upscaler"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.dropboxapi.com\/2\/sharing\/create_shared_link_with_settings",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application\/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"path\": \"{{ $json.path_display }}\",\n  \"settings\": {\n    \"requested_visibility\": \"public\"\n  }\n}\n",
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                -480,
+                -16
+            ],
+            "id": "a378bd0f-b531-4d98-93c6-4a02d2143d33",
+            "name": "HTTP Request"
+        },
+        {
+            "parameters": {
+                "jsCode": "return [{\n  json: {\n    image_url: $json.url\n      .replace(\"?dl=0\", \"?raw=1\")\n      .replace(\"&dl=0\", \"&raw=1\")\n  }\n}];\n\n"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -256,
+                -16
+            ],
+            "id": "d9ddf89c-5079-4296-93de-db5cf8662340",
+            "name": "Code"
+        },
+        {
+            "parameters": {
+                "mode": "combine",
+                "combineBy": "combineAll",
+                "options": []
+            },
+            "type": "n8n-nodes-base.merge",
+            "typeVersion": 3.20000000000000017763568394002504646778106689453125,
+            "position": [
+                320,
+                144
+            ],
+            "id": "4141175d-3a7d-4526-9077-c58bd7e7a576",
+            "name": "Merge"
+        },
+        {
+            "parameters": {
+                "resource": "image",
+                "operation": "analyze",
+                "modelId": {
+                    "__rl": true,
+                    "value": "gpt-4o",
+                    "mode": "list",
+                    "cachedResultName": "GPT-4O"
+                },
+                "text": "=Analyze these two images - the first is the Start Frame and the second is the End Frame. Generate a detailed motion graphics animation prompt that describes how to transition from the Start Frame to the End Frame. Include specific details about movement, transformations, timing, easing, effects, and any intermediate states. Return only the animation prompt text that can be directly used in a video generation tool - no explanations, no additional text, no JSON structure, just the ready-to-paste prompt itself in a single para.\n\n---\n\n(Optional) Include this video description in the video prompt:\n{{ $('Input Validation').item.json.videoDescription }} (Ignore it, if it's empty)",
+                "imageUrls": "={{ $json.startFrame }}, {{ $json.endFrame }}",
+                "options": []
+            },
+            "type": "@n8n\/n8n-nodes-langchain.openAi",
+            "typeVersion": 1.8000000000000000444089209850062616169452667236328125,
+            "position": [
+                992,
+                144
+            ],
+            "id": "fcba880f-9cdb-4e75-9a0b-3c353c9b58e2",
+            "name": "Analyze image",
+            "credentials": {
+                "openAiApi": {
+                    "id": "bfZD7tWaxPGpOAH8",
+                    "name": "OpenAi account"
+                }
+            }
+        }
+    ],
+    "pinData": [],
+    "connections": {
+        "On form submission": {
+            "main": [
+                [
+                    {
+                        "node": "Input Validation",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Upload a file",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Input Validation": {
+            "main": [
+                [
+                    {
+                        "node": "Aspect Ratio Conversion",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Aspect Ratio Conversion": {
+            "main": [
+                [
+                    {
+                        "node": "Retrieve Binary File",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 1
+                    }
+                ]
+            ]
+        },
+        "Retrieve Binary File": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Seedream-v4-edit": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Upload a file": {
+            "main": [
+                [
+                    {
+                        "node": "HTTP Request",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Edit Fields": {
+            "main": [
+                [
+                    {
+                        "node": "Analyze image",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Hailuo-i2v-pro": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "Hailuo-i2v-pro-result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Hailuo-i2v-pro-result": {
+            "main": [
+                []
+            ]
+        },
+        "image-upscaler": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTTP Request": {
+            "main": [
+                [
+                    {
+                        "node": "Code",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code": {
+            "main": [
+                [
+                    {
+                        "node": "image-upscaler",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Merge": {
+            "main": [
+                [
+                    {
+                        "node": "Seedream-v4-edit",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Analyze image": {
+            "main": [
+                [
+                    {
+                        "node": "Hailuo-i2v-pro",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "c6e66a44-91e1-4aaa-853f-f8b99103f2ab",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "0b008bd86df5902c8c20987844e8ef7a6cf9a5639f4abd7f8a22764455c02c65"
+    },
+    "id": "awjaDWSGWN5WPu7u",
+    "tags": []
+}

@@ -1,0 +1,387 @@
+{
+    "name": "Product Video Builder Subworkflow",
+    "nodes": [
+        {
+            "parameters": {
+                "workflowInputs": {
+                    "values": [
+                        {
+                            "name": "video_prompt"
+                        },
+                        {
+                            "name": "aspect_ratio"
+                        },
+                        {
+                            "name": "imageUrls",
+                            "type": "array"
+                        },
+                        {
+                            "name": "generationType"
+                        }
+                    ]
+                }
+            },
+            "id": "e1779269-a5ee-4ad9-893e-2d51fd82387c",
+            "typeVersion": 1.100000000000000088817841970012523233890533447265625,
+            "name": "When Executed by Another Workflow",
+            "type": "n8n-nodes-base.executeWorkflowTrigger",
+            "position": [
+                -912,
+                128
+            ]
+        },
+        {
+            "parameters": [],
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.100000000000000088817841970012523233890533447265625,
+            "position": [
+                144,
+                272
+            ],
+            "id": "d6d5f00f-27c1-4392-820a-a49e859ffde1",
+            "name": "Wait2",
+            "webhookId": "27d6af3b-2323-4a22-b5e2-4756473827a8"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "81d332c2-2e17-43d9-bf85-a7fba1d8598b",
+                            "name": "data.taskId",
+                            "value": "={{ $json.data.taskId }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.399999999999999911182158029987476766109466552734375,
+            "position": [
+                320,
+                272
+            ],
+            "id": "0cc6f85b-7bbf-4e94-a404-a3a3cd6fc0b0",
+            "name": "Edit Fields14"
+        },
+        {
+            "parameters": {
+                "rules": {
+                    "values": [
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "leftValue": "={{ $json.data.successFlag }}",
+                                        "rightValue": 1,
+                                        "operator": {
+                                            "type": "number",
+                                            "operation": "equals"
+                                        },
+                                        "id": "7e51e0bd-c19b-4e57-bd46-885e531aff52"
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "Completed"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "d3a0615b-8384-4ec3-b18b-daae9e6a350b",
+                                        "leftValue": "={{ $json.data.successFlag }}",
+                                        "rightValue": 3,
+                                        "operator": {
+                                            "type": "number",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "Failed"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "2495be20-ec23-4de3-a53f-baa79d75862e",
+                                        "leftValue": "={{ $json.data.successFlag }}",
+                                        "rightValue": 2,
+                                        "operator": {
+                                            "type": "number",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "Failed"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "strict",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "4c1dba3d-a788-4205-bb9e-51b0aa892c61",
+                                        "leftValue": "={{ $json.data.successFlag }}",
+                                        "rightValue": 0,
+                                        "operator": {
+                                            "type": "number",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "Retry"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 3.20000000000000017763568394002504646778106689453125,
+            "position": [
+                -208,
+                96
+            ],
+            "id": "9acc701e-942b-4a08-a53d-8fee52bbaf9e",
+            "name": "Switch1"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "921e029e-6808-401a-8f1f-df59fcc8a78f",
+                            "name": "resultUrls",
+                            "value": "={{ $json.data.response.resultUrls.find(item => true) }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.399999999999999911182158029987476766109466552734375,
+            "position": [
+                0,
+                0
+            ],
+            "id": "c325a7e3-2201-4bc0-8076-babcf2ad1b0e",
+            "name": "Edit Fields"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/api.kie.ai\/api\/v1\/veo\/generate",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application\/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "=prompt",
+                            "value": "={{ $json.video_prompt }}"
+                        },
+                        {
+                            "name": "=model",
+                            "value": "=veo3_fast"
+                        },
+                        {
+                            "name": "=aspectRatio",
+                            "value": "={{ $json.aspect_ratio }}"
+                        },
+                        {
+                            "name": "=imageUrls",
+                            "value": "={{ $json.imageUrls }}"
+                        },
+                        {
+                            "name": "generationType",
+                            "value": "={{ $json.generationType }}"
+                        },
+                        {
+                            "name": "enableFallback",
+                            "value": "={{ true }}"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                -688,
+                128
+            ],
+            "id": "32d99fca-fa97-4ad1-9ffb-c0302428289b",
+            "name": "Submit generation request"
+        },
+        {
+            "parameters": {
+                "url": "=https:\/\/api.kie.ai\/api\/v1\/veo\/record-info",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "taskId",
+                            "value": "={{ $json.data.taskId }}"
+                        }
+                    ]
+                },
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer <token>"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application\/json"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                -432,
+                128
+            ],
+            "id": "0af8fa38-2517-4da1-aedc-731b75e38560",
+            "name": "Get request status"
+        }
+    ],
+    "pinData": [],
+    "connections": {
+        "When Executed by Another Workflow": {
+            "main": [
+                [
+                    {
+                        "node": "Submit generation request",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait2": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields14",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Edit Fields14": {
+            "main": [
+                [
+                    {
+                        "node": "Get request status",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Switch1": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [],
+                [],
+                [
+                    {
+                        "node": "Wait2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Submit generation request": {
+            "main": [
+                [
+                    {
+                        "node": "Get request status",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get request status": {
+            "main": [
+                [
+                    {
+                        "node": "Switch1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "db19ab48-3b69-47a6-8b46-32d789322c83",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "28dce675ee27a1064072e27c15b9f206e3cb763ee136d0c0334d042fdcdc426f"
+    },
+    "id": "iUCdRxGeA6LwynVo",
+    "tags": []
+}

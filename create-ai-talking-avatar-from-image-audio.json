@@ -1,0 +1,517 @@
+{
+    "name": "AI Talking Avatar",
+    "nodes": [
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/www.runninghub.ai\/task\/openapi\/create",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Host",
+                            "value": "www.runninghub.ai"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application\/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"apiKey\": \"{{ $('API Setup').item.json.runninghub_api }}\",\n  \"workflowId\": \"1980865276046655489\",\n  \"nodeInfoList\": [\n    {\n      \"nodeId\": \"12\",\n      \"fieldName\": \"image\",\n      \"fieldValue\": \"{{ $json.data[0].data.fileName }}\"\n    },\n    {\n      \"nodeId\": \"19\",\n      \"fieldName\": \"audio\",\n      \"fieldValue\": \"{{ $json.data[1].data.fileName }}\"\n    },\n    {\n      \"nodeId\": \"14\",\n      \"fieldName\": \"crop\",\n      \"fieldValue\": \"center\"\n    }\n  ]\n}",
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                176,
+                144
+            ],
+            "id": "d8d1d87f-fd3b-4983-aa8a-4702c11da515",
+            "name": "createTask"
+        },
+        {
+            "parameters": {
+                "aggregate": "aggregateAllItemData",
+                "options": []
+            },
+            "type": "n8n-nodes-base.aggregate",
+            "typeVersion": 1,
+            "position": [
+                928,
+                16
+            ],
+            "id": "fe51951f-1107-4af1-890a-79140ecbcc5e",
+            "name": "Aggregate"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/www.runninghub.ai\/task\/openapi\/status",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Host",
+                            "value": "www.runninghub.ai"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "apiKey",
+                            "value": "={{ $('API Setup').item.json.runninghub_api }}"
+                        },
+                        {
+                            "name": "taskId",
+                            "value": "={{ $('createTask').item.json.data.taskId }}"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                480,
+                144
+            ],
+            "id": "c904efde-1934-424f-92fb-ea4ec9ef7e1a",
+            "name": "checkStatus"
+        },
+        {
+            "parameters": {
+                "mode": "expression",
+                "numberOutputs": 3,
+                "output": "={{ \n  $json.data === \"FAILED\" ? 0 : \n  $json.data === \"SUCCESS\" ? 1 : \n  ($json.data === \"QUEUED\" || $json.data === \"RUNNING\") ? 2 : \n  3 \n}}",
+                "looseTypeValidation": true
+            },
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 3.29999999999999982236431605997495353221893310546875,
+            "position": [
+                624,
+                128
+            ],
+            "id": "e8b00d26-dd1a-4e49-83b0-5a82c806b254",
+            "name": "Switch"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/www.runninghub.ai\/task\/openapi\/outputs",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Host",
+                            "value": "www.runninghub.ai"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "apiKey",
+                            "value": "={{ $('API Setup').item.json.runninghub_api }}"
+                        },
+                        {
+                            "name": "taskId",
+                            "value": "={{ $('createTask').item.json.data.taskId }}"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                784,
+                144
+            ],
+            "id": "4e00a67a-3334-499b-b634-29f2ce9e4b7c",
+            "name": "getOutput"
+        },
+        {
+            "parameters": {
+                "url": "={{ $json.data[0].fileUrl }}",
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                1120,
+                144
+            ],
+            "id": "9789dfdc-4c25-4f56-8fc1-c1c7c750ab57",
+            "name": "downloadVideo"
+        },
+        {
+            "parameters": {
+                "formTitle": "Create Your AI Talking Avatar",
+                "formFields": {
+                    "values": [
+                        {
+                            "fieldLabel": "Upload your image",
+                            "fieldType": "file",
+                            "multipleFiles": false,
+                            "acceptFileTypes": ".jpg, .png, .jpeg, .webp",
+                            "requiredField": true
+                        },
+                        {
+                            "fieldLabel": "Upload your audio",
+                            "fieldType": "file",
+                            "multipleFiles": false,
+                            "acceptFileTypes": ".mp3, .wav, .flac",
+                            "requiredField": true
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.formTrigger",
+            "typeVersion": 2.29999999999999982236431605997495353221893310546875,
+            "position": [
+                0,
+                0
+            ],
+            "id": "be5f91ae-433a-4745-9dda-628afe780a13",
+            "name": "On form submission",
+            "webhookId": "5bba60a9-6234-48b9-9fec-ec86f1ff694d"
+        },
+        {
+            "parameters": {
+                "jsCode": "return{\n  json: {},\n  binary: $('On form submission').item.binary\n}"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                320,
+                0
+            ],
+            "id": "be294036-b097-4b6a-8444-07823be2c6af",
+            "name": "Code in JavaScript"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/www.runninghub.ai\/task\/openapi\/upload",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Host",
+                            "value": "www.runninghub.ai"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "contentType": "multipart-form-data",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "apiKey",
+                            "value": "={{ $('API Setup').item.json.runninghub_api }}"
+                        },
+                        {
+                            "parameterType": "formBinaryData",
+                            "name": "file",
+                            "inputDataFieldName": "Upload_your_image"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                480,
+                0
+            ],
+            "id": "ea1eaf0c-9641-4df3-a0fa-15dc0a550f12",
+            "name": "uploadImage"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https:\/\/www.runninghub.ai\/task\/openapi\/upload",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Host",
+                            "value": "www.runninghub.ai"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "contentType": "multipart-form-data",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "apiKey",
+                            "value": "={{ $('API Setup').item.json.runninghub_api }}"
+                        },
+                        {
+                            "parameterType": "formBinaryData",
+                            "name": "file",
+                            "inputDataFieldName": "Upload_your_audio"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.20000000000000017763568394002504646778106689453125,
+            "position": [
+                624,
+                0
+            ],
+            "id": "a0fd34cb-3741-4759-b34d-0a748acf6e72",
+            "name": "uploadAudio"
+        },
+        {
+            "parameters": [],
+            "type": "n8n-nodes-base.merge",
+            "typeVersion": 3.20000000000000017763568394002504646778106689453125,
+            "position": [
+                784,
+                16
+            ],
+            "id": "cf422d41-f5c4-4a3d-8846-1ede02659998",
+            "name": "Merge"
+        },
+        {
+            "parameters": {
+                "amount": 1,
+                "unit": "minutes"
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.100000000000000088817841970012523233890533447265625,
+            "position": [
+                320,
+                144
+            ],
+            "id": "8fc919fb-681e-4a0e-b3ab-23b3aac1fc82",
+            "name": "Wait",
+            "webhookId": "63770bf5-07b0-4ea7-8e3f-db5b8a0c3ee9"
+        },
+        {
+            "parameters": {
+                "amount": 15
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.100000000000000088817841970012523233890533447265625,
+            "position": [
+                320,
+                304
+            ],
+            "id": "5bd13283-41e0-42e0-a537-c2824cf4e533",
+            "name": "Wait1",
+            "webhookId": "abe56269-f4a8-43d9-8f0e-14cbb32b95c6"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "9c5e12a7-674e-46d2-9569-fd28fb00c35c",
+                            "name": "runninghub_api",
+                            "value": "YOUR_RUNNINGHUB_API",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": []
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.399999999999999911182158029987476766109466552734375,
+            "position": [
+                176,
+                0
+            ],
+            "id": "62eb5a99-f1de-4404-99e7-ac2cdcdd112b",
+            "name": "API Setup"
+        }
+    ],
+    "pinData": [],
+    "connections": {
+        "Aggregate": {
+            "main": [
+                [
+                    {
+                        "node": "createTask",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "createTask": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "checkStatus": {
+            "main": [
+                [
+                    {
+                        "node": "Switch",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Switch": {
+            "main": [
+                [],
+                [
+                    {
+                        "node": "getOutput",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Wait1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "getOutput": {
+            "main": [
+                [
+                    {
+                        "node": "downloadVideo",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "On form submission": {
+            "main": [
+                [
+                    {
+                        "node": "API Setup",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code in JavaScript": {
+            "main": [
+                [
+                    {
+                        "node": "uploadImage",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "uploadAudio",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "uploadImage": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "uploadAudio": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 1
+                    }
+                ]
+            ]
+        },
+        "Merge": {
+            "main": [
+                [
+                    {
+                        "node": "Aggregate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "checkStatus",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait1": {
+            "main": [
+                [
+                    {
+                        "node": "checkStatus",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "API Setup": {
+            "main": [
+                [
+                    {
+                        "node": "Code in JavaScript",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "68561959-d940-4ed6-9706-3508494bbcd8",
+    "meta": {
+        "instanceId": "28dce675ee27a1064072e27c15b9f206e3cb763ee136d0c0334d042fdcdc426f"
+    },
+    "id": "deBqzQVs8App1MXu",
+    "tags": [
+        {
+            "createdAt": "2025-10-21T04:56:51.479Z",
+            "updatedAt": "2025-10-21T04:56:51.479Z",
+            "id": "12VuTLLCsGxVa9s5",
+            "name": "Template"
+        }
+    ]
+}
